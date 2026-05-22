@@ -226,9 +226,13 @@ def api_detect():
 
 @app.route("/api/qr")
 def api_qr():
-    ip = get_local_ip()
-    port = int(os.environ.get("PORT", 5000))
-    url = f"http://{ip}:{port}"
+    render_url = os.environ.get("RENDER_EXTERNAL_URL")
+    if render_url:
+        url = render_url
+    else:
+        ip = get_local_ip()
+        port = int(os.environ.get("PORT", 5000))
+        url = f"http://{ip}:{port}"
     qr_img = qrcode.make(url)
     buf = io.BytesIO()
     qr_img.get_image().save(buf, format="PNG") if hasattr(qr_img, "get_image") else qr_img.save(buf)
