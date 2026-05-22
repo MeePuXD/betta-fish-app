@@ -1018,8 +1018,9 @@ async function fetchLatestTemp() {
     updateTempUI(v);
   } catch(e) {}
 }
-// อัพเดทอุณหภูมิจาก ESP32 ทุก 30 วินาที
-setInterval(fetchLatestTemp, 30000);
+// อัพเดทอุณหภูมิจาก ESP32 ทุก 10 วินาที และดึงทันทีตอนโหลดหน้า
+fetchLatestTemp();
+setInterval(fetchLatestTemp, 10000);
 
 /* ═══ QR ════════════════════════════════════════════════ */
 async function showQR() {
