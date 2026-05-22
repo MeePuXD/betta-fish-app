@@ -233,9 +233,13 @@ def api_qr():
         ip = get_local_ip()
         port = int(os.environ.get("PORT", 5000))
         url = f"http://{ip}:{port}"
-    qr_img = qrcode.make(url)
+    qr = qrcode.QRCode()
+    qr.add_data(url)
+    qr.make(fit=True)
+    qr_img = qr.make_image()
     buf = io.BytesIO()
-    qr_img.get_image().save(buf, format="PNG") if hasattr(qr_img, "get_image") else qr_img.save(buf)
+    qr_img.save(buf)
+    buf.seek(0)
     b64 = base64.b64encode(buf.getvalue()).decode()
     return jsonify({"url": url, "qr": f"data:image/png;base64,{b64}"})
 
