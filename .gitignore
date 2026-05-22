@@ -1,0 +1,39 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.egg-info/
+dist/
+build/
+
+# ข้อมูล local
+aquarium_data.json
+_tmp_*.jpg
+
+# dataset ขนาดใหญ่ (ไม่จำเป็นต้อง deploy)
+roboflow_dataset/
+dataset/
+ปลาปกติ/
+ปลาป่วย/
+
+# model เก่า (เก็บแค่ v4 ที่ดีที่สุด)
+models/betta_classifier/
+models/betta_classifier-2/
+models/betta_classifier-final/
+models/betta_classifier-v3/
+models/betta_classifier-v5/
+
+# base model (ดาวน์โหลดได้ใหม่)
+yolov8n-cls.pt
+
+# script training (ไม่ต้องการบน cloud)
+train_model.py
+prepare_dataset.py
+augment_dropsy.py
+extract_frames.py
+generate_fungus_dataset.py
+generate_whitespot_dataset.py
+detect_disease.py
+
+# VS Code
+.vscode/

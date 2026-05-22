@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Betta Fish Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════════════════ */
+:root {
+  --bg:          #06061a;
+  --card:        rgba(255,255,255,0.038);
+  --card-hover:  rgba(255,255,255,0.065);
+  --border:      rgba(255,255,255,0.085);
+  --border-glow: rgba(94,234,212,0.35);
+  --surface:     rgba(255,255,255,0.06);
+  --text:        #e8eaf8;
+  --sub:         #7b83a8;
+  --dim:         #404466;
+
+  --teal:   #5eead4;
+  --blue:   #60a5fa;
+  --green:  #4ade80;
+  --red:    #f87171;
+  --amber:  #fbbf24;
+  --orange: #fb923c;
+  --violet: #a78bfa;
+  --pink:   #f472b6;
+  --mauve:  #c084fc;
+
+  --r: 22px;
+
+  --shadow-card: 0 8px 40px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.06) inset;
+  --shadow-lift: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(94,234,212,0.18);
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Noto Sans Thai', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Deep space background */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at -5% 0%,  rgba(94,234,212,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 60% at 105% 100%, rgba(96,165,250,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 50% at 50%  50%, rgba(167,139,250,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 30% 40% at 80%  10%, rgba(244,114,182,0.04) 0%, transparent 50%);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(94,234,212,0.2); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(94,234,212,0.4); }
+
+/* ═══════════════════════════════════════════════════════
+   BUBBLES (animated background)
+═══════════════════════════════════════════════════════ */
+#bubbles {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+}
+.bubble {
+  position: absolute; bottom: -60px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(94,234,212,0.25), rgba(96,165,250,0.08));
+  border: 1px solid rgba(94,234,212,0.15);
+  animation: rise linear infinite;
+}
+@keyframes rise {
+  0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.4; }
+  100% { transform: translateY(-110vh) translateX(30px) scale(1.1); opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════════════ */
+header {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 28px;
+  background: rgba(6,6,26,0.82);
+  backdrop-filter: blur(28px) saturate(180%);
+  border-bottom: 1px solid rgba(94,234,212,0.1);
+  box-shadow: 0 1px 40px rgba(0,0,0,0.4);
+}
+
+.hdr-logo {
+  position: relative; flex-shrink: 0;
+  width: 46px; height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(94,234,212,0.15), rgba(96,165,250,0.15));
+  border: 1px solid rgba(94,234,212,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 0 20px rgba(94,234,212,0.12), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+.hdr-logo::after {
+  content: '';
+  position: absolute; inset: -1px; border-radius: 15px;
+  background: linear-gradient(135deg, rgba(94,234,212,0.4), transparent 60%);
+  z-index: -1; opacity: 0;
+  transition: opacity 0.3s;
+}
+.hdr-logo:hover::after { opacity: 1; }
+
+.hdr-title {
+  font-size: 1.2rem; font-weight: 800; letter-spacing: -0.3px;
+  background: linear-gradient(100deg, var(--teal) 0%, var(--blue) 50%, var(--violet) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hdr-sub { font-size: 0.75rem; color: var(--sub); margin-top: 1px; }
+
+.hdr-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+.status-pill {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 13px; border-radius: 99px; font-size: 0.75rem; font-weight: 700;
+}
+{% if model_loaded %}
+.status-pill {
+  background: rgba(74,222,128,0.12);
+  border: 1px solid rgba(74,222,128,0.3);
+  color: var(--green);
+}
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+              box-shadow: 0 0 8px var(--green); animation: pulse-dot 2s ease-in-out infinite; }
+{% else %}
+.status-pill { background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.3); color: var(--red); }
+.status-dot  { width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
+{% endif %}
+@keyframes pulse-dot {
+  0%,100% { box-shadow: 0 0 6px var(--green); }
+  50%      { box-shadow: 0 0 14px var(--green), 0 0 24px rgba(74,222,128,0.3); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════════════ */
+main {
+  position: relative; z-index: 1;
+  max-width: 1160px; margin: 0 auto;
+  padding: 30px 22px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 22px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   CARD
+═══════════════════════════════════════════════════════ */
+.card {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 26px;
+  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.3s cubic-bezier(.34,1.56,.64,1),
+              box-shadow 0.3s ease,
+              border-color 0.3s ease,
+              background 0.3s ease;
+  animation: cardIn 0.5s ease backwards;
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: none; }
+}
+.card:nth-child(1) { animation-delay: 0.05s; }
+.card:nth-child(2) { animation-delay: 0.10s; }
+.card:nth-child(3) { animation-delay: 0.15s; }
+.card:nth-child(4) { animation-delay: 0.20s; }
+.card:nth-child(5) { animation-delay: 0.25s; }
+
+.card:hover {
+  transform: translateY(-5px) scale(1.005);
+  box-shadow: var(--shadow-lift);
+  background: var(--card-hover);
+  border-color: rgba(94,234,212,0.2);
+}
+
+/* Gradient top edge accent */
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 20px; right: 20px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(94,234,212,0.5), rgba(96,165,250,0.5), transparent);
+  border-radius: 1px;
+  opacity: 0; transition: opacity 0.3s;
+}
+.card:hover::before { opacity: 1; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 0.68rem; font-weight: 800; letter-spacing: 1.8px; text-transform: uppercase;
+  color: var(--sub); margin-bottom: 22px;
+}
+.chip-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  border: none; border-radius: 13px;
+  padding: 12px 20px;
+  font-family: inherit; font-size: 0.87rem; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.1px;
+  position: relative; overflow: hidden;
+  transition: transform 0.15s cubic-bezier(.34,1.4,.64,1),
+              box-shadow 0.2s ease, filter 0.2s;
+}
+.btn::before {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(255,255,255,0); transition: background 0.15s;
+}
+.btn:hover::before  { background: rgba(255,255,255,0.09); }
+.btn:active         { transform: scale(0.95) !important; filter: brightness(0.92); }
+.btn:disabled       { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+
+/* Ripple on click */
+.btn .ripple {
+  position: absolute; border-radius: 50%;
+  background: rgba(255,255,255,0.3); transform: scale(0);
+  animation: ripple 0.5s ease-out forwards; pointer-events: none;
+}
+@keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+.btn-primary {
+  background: linear-gradient(135deg, #2dd4bf 0%, #0ea5e9 100%);
+  color: #06061a; font-weight: 800;
+  box-shadow: 0 4px 22px rgba(45,212,191,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.btn-primary:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 8px 32px rgba(45,212,191,0.5); }
+
+.btn-success {
+  background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+  color: #06061a; font-weight: 800;
+  box-shadow: 0 4px 22px rgba(74,222,128,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.btn-success:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 8px 32px rgba(74,222,128,0.45); }
+
+.btn-violet {
+  background: linear-gradient(135deg, #c084fc 0%, #7c3aed 100%);
+  color: #fff; font-weight: 800;
+  box-shadow: 0 4px 22px rgba(192,132,252,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.btn-violet:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 8px 32px rgba(192,132,252,0.45); }
+
+.btn-danger {
+  background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+  color: #fff; font-weight: 800;
+  box-shadow: 0 4px 22px rgba(248,113,113,0.25);
+}
+.btn-danger:hover { transform: translateY(-2px) scale(1.01); }
+
+.btn-ghost {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  box-shadow: none;
+}
+.btn-ghost:hover { border-color: rgba(94,234,212,0.35); background: rgba(94,234,212,0.06); }
+
+.btn-full { width: 100%; margin-top: 12px; padding: 13px; font-size: 0.9rem; }
+
+/* ═══════════════════════════════════════════════════════
+   TEMPERATURE — ARC GAUGE
+═══════════════════════════════════════════════════════ */
+.gauge-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  margin: -4px 0 6px;
+}
+.gauge-wrap svg { width: 210px; height: 122px; overflow: visible; filter: drop-shadow(0 0 16px rgba(94,234,212,0.12)); }
+
+.temp-status {
+  text-align: center; font-size: 0.84rem; font-weight: 700;
+  padding: 6px 16px; border-radius: 99px;
+  margin-bottom: 16px;
+  transition: background 0.4s, color 0.4s, border-color 0.4s;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.input-row { display: flex; gap: 9px; }
+.input-row input {
+  flex: 1;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 13px; padding: 12px 16px;
+  color: var(--text); font-family: inherit; font-size: 1rem; text-align: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-row input:focus {
+  outline: none; border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(94,234,212,0.12);
+}
+
+/* ═══════════════════════════════════════════════════════
+   WATER CHANGE — RING
+═══════════════════════════════════════════════════════ */
+.wc-body { display: flex; align-items: center; gap: 18px; }
+.ring-wrap { flex-shrink: 0; filter: drop-shadow(0 0 16px rgba(96,165,250,0.15)); }
+.ring-wrap svg { width: 118px; height: 118px; }
+
+.wc-stats { flex: 1; display: flex; flex-direction: column; gap: 9px; }
+.stat-row {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 10px 14px;
+  display: flex; justify-content: space-between; align-items: center;
+  transition: border-color 0.2s;
+}
+.stat-row:hover { border-color: rgba(94,234,212,0.2); }
+.stat-label { font-size: 0.75rem; color: var(--sub); }
+.stat-value { font-size: 1rem; font-weight: 700; }
+
+.select-row { display: flex; align-items: center; gap: 8px; }
+.select-row label { font-size: 0.78rem; color: var(--sub); white-space: nowrap; }
+.select-row select {
+  flex: 1; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 11px; padding: 9px 11px; color: var(--text); font-family: inherit;
+  transition: border-color 0.2s;
+}
+.select-row select:focus { outline: none; border-color: var(--teal); }
+
+/* ═══════════════════════════════════════════════════════
+   CAMERA CARD
+═══════════════════════════════════════════════════════ */
+#camera-section { grid-column: span 2; }
+@media (max-width: 700px) { #camera-section { grid-column: span 1; } }
+
+.cam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 700px) { .cam-grid { grid-template-columns: 1fr; } }
+
+.cam-frame {
+  background: #000; border-radius: 16px;
+  border: 1px solid var(--border);
+  aspect-ratio: 4/3; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* Scanning animation overlay */
+.cam-frame.scanning::after {
+  content: '';
+  position: absolute; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--teal), transparent);
+  box-shadow: 0 0 12px var(--teal);
+  animation: scan-line 1.5s ease-in-out infinite;
+}
+@keyframes scan-line {
+  0%   { top: 0%; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.cam-ph { text-align: center; color: var(--sub); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.cam-ph-icon {
+  width: 76px; height: 76px; border-radius: 50%;
+  background: linear-gradient(135deg, rgba(94,234,212,0.08), rgba(96,165,250,0.08));
+  border: 1px solid rgba(94,234,212,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem;
+  animation: float-icon 3s ease-in-out infinite;
+}
+@keyframes float-icon {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-7px); }
+}
+.cam-ph p { font-size: 0.82rem; line-height: 1.65; }
+
+#video, #result-canvas { width: 100%; height: 100%; object-fit: cover; }
+#video { display: none; }
+#result-canvas { display: none; }
+
+.cam-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.cam-btns .btn { font-size: 0.8rem; padding: 10px 12px; }
+#file-input { display: none; }
+
+/* Result panel */
+.r-panel { display: flex; flex-direction: column; gap: 14px; min-height: 260px; }
+
+.r-verdict {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 18px; display: none;
+  animation: fadeSlideIn 0.35s ease;
+}
+@keyframes fadeSlideIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+.r-vd-tag { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--sub); margin-bottom: 8px; }
+.r-vd-name { font-size: 1.45rem; font-weight: 900; line-height: 1.2; letter-spacing: -0.3px; }
+.r-vd-conf { font-size: 0.82rem; color: var(--sub); margin-top: 5px; }
+.r-conf-track { height: 5px; background: rgba(255,255,255,0.07); border-radius: 99px; margin-top: 10px; overflow: hidden; }
+.r-conf-fill  { height: 100%; border-radius: 99px; transition: width 0.8s cubic-bezier(.34,1.2,.64,1); }
+
+.r-top5 { display: none; }
+.r-top5-title { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--sub); margin-bottom: 10px; }
+.r-bars { display: flex; flex-direction: column; gap: 7px; }
+.r-bar-row { display: flex; align-items: center; gap: 9px; }
+.r-bar-name { font-size: 0.78rem; min-width: 130px; color: var(--sub); }
+.r-bar-name.is-top { color: var(--text); font-weight: 700; }
+.r-bar-track { flex: 1; height: 7px; background: rgba(255,255,255,0.07); border-radius: 99px; overflow: hidden; }
+.r-bar-fill  { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--teal), var(--blue)); transition: width 0.7s cubic-bezier(.34,1.2,.64,1); }
+.r-bar-pct   { font-size: 0.76rem; color: var(--sub); min-width: 38px; text-align: right; }
+
+.r-advice {
+  background: linear-gradient(135deg, rgba(94,234,212,0.06), rgba(96,165,250,0.06));
+  border: 1px solid rgba(94,234,212,0.18);
+  border-radius: 16px; padding: 18px; display: none;
+  animation: fadeSlideIn 0.4s ease 0.1s backwards;
+}
+.r-advice h4 { font-size: 0.82rem; font-weight: 800; color: var(--teal); margin-bottom: 11px; letter-spacing: 0.3px; }
+.r-advice ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.r-advice li { font-size: 0.81rem; line-height: 1.55; display: flex; gap: 9px; }
+.r-advice li::before { content: '→'; color: var(--teal); flex-shrink: 0; font-weight: 700; }
+
+.r-empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 10px; color: var(--dim);
+  border: 1px dashed rgba(255,255,255,0.07); border-radius: 16px; padding: 30px;
+  font-size: 0.82rem; text-align: center;
+}
+.r-empty span { font-size: 2.2rem; }
+
+/* ═══════════════════════════════════════════════════════
+   TREATMENT GRID
+═══════════════════════════════════════════════════════ */
+#treatment-section { grid-column: 1 / -1; }
+
+.section-head {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; gap: 14px;
+  padding: 4px 0 0;
+}
+.section-head-line { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(94,234,212,0.2), transparent); }
+.section-head-line.right { background: linear-gradient(270deg, rgba(96,165,250,0.2), transparent); }
+.section-head-label {
+  font-size: 0.68rem; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--sub); white-space: nowrap;
+}
+
+.t-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;
+}
+
+.t-card {
+  border-radius: 18px; padding: 20px;
+  border: 1px solid rgba(255,255,255,0.07);
+  position: relative; overflow: hidden;
+  cursor: default;
+  transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), box-shadow 0.25s ease;
+}
+.t-card:hover { transform: translateY(-5px) scale(1.01); }
+
+/* Glow blob inside card */
+.t-card::before {
+  content: ''; position: absolute;
+  width: 120px; height: 120px; border-radius: 50%;
+  top: -30px; right: -30px;
+  background: radial-gradient(circle, var(--t-glow, rgba(94,234,212,0.15)), transparent 70%);
+  pointer-events: none;
+}
+
+.t-icon-wrap {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; margin-bottom: 12px;
+}
+.t-name { font-size: 0.95rem; font-weight: 800; margin-bottom: 5px; }
+.t-cause { font-size: 0.76rem; color: var(--sub); line-height: 1.55; margin-bottom: 12px; }
+.t-steps { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.t-steps li { font-size: 0.76rem; color: var(--sub); line-height: 1.45; display: flex; gap: 7px; }
+.t-steps li b { color: var(--text); flex-shrink: 0; }
+
+/* ═══════════════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════════════ */
+.modal {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(10px);
+  align-items: center; justify-content: center;
+}
+.modal.show { display: flex; animation: mfade 0.2s ease; }
+@keyframes mfade { from { opacity: 0; } to { opacity: 1; } }
+
+.modal-box {
+  background: #0e0e28;
+  border: 1px solid rgba(94,234,212,0.22);
+  border-radius: 28px; padding: 30px 26px;
+  text-align: center; max-width: 310px; width: 90%;
+  box-shadow: 0 28px 80px rgba(0,0,0,0.7), 0 0 80px rgba(94,234,212,0.06);
+  animation: mslide 0.28s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes mslide {
+  from { transform: translateY(24px) scale(0.94); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+.modal-box h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 18px; }
+.modal-box img { width: 200px; border-radius: 14px; border: 3px solid rgba(255,255,255,0.15); }
+.modal-url { color: var(--teal); font-size: 0.83rem; margin: 12px 0 8px; word-break: break-all; }
+.modal-note { color: var(--sub); font-size: 0.73rem; line-height: 1.6; }
+
+/* ═══════════════════════════════════════════════════════
+   SPINNER
+═══════════════════════════════════════════════════════ */
+.spin {
+  width: 30px; height: 30px; margin: 16px auto;
+  border: 2.5px solid rgba(255,255,255,0.08);
+  border-top-color: var(--teal);
+  border-radius: 50%; animation: spin 0.65s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════════════════════════════
+   UTILITY
+═══════════════════════════════════════════════════════ */
+@media (max-width: 500px) {
+  main { padding: 16px 14px; gap: 16px; }
+  .card { padding: 20px; }
+  header { padding: 11px 16px; }
+  .hdr-title { font-size: 1.05rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Animated bubbles -->
+<div id="bubbles"></div>
+
+<!-- ══ HEADER ═══════════════════════════════════════════ -->
+<header>
+  <div class="hdr-logo">🐟</div>
+  <div>
+    <div class="hdr-title">Betta Fish Monitor</div>
+    <div class="hdr-sub">ระบบดูแลปลากัดอัจฉริยะ</div>
+  </div>
+  <div class="hdr-right">
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      {% if model_loaded %}AI พร้อมใช้งาน{% else %}ไม่พบโมเดล{% endif %}
+    </div>
+    <button class="btn btn-ghost" onclick="showQR()" style="padding:7px 14px;font-size:0.78rem;">
+      📱 QR
+    </button>
+  </div>
+</header>
+
+<!-- ══ MAIN ══════════════════════════════════════════════ -->
+<main>
+
+  <!-- TEMPERATURE ──────────────────────────────────── -->
+  <div class="card">
+    <div class="chip">
+      <div class="chip-dot" style="background:var(--teal);box-shadow:0 0 8px var(--teal);"></div>
+      อุณหภูมิน้ำ
+    </div>
+
+    <div class="gauge-wrap">
+      <svg viewBox="0 0 210 122" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#60a5fa"/>
+            <stop offset="45%"  stop-color="#4ade80"/>
+            <stop offset="75%"  stop-color="#fbbf24"/>
+            <stop offset="100%" stop-color="#f87171"/>
+          </linearGradient>
+          <filter id="arcGlow">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- Track -->
+        <path d="M 22 108 A 83 83 0 0 1 188 108"
+              stroke="rgba(255,255,255,0.07)" stroke-width="15"
+              fill="none" stroke-linecap="round"/>
+        <!-- Rainbow hint -->
+        <path d="M 22 108 A 83 83 0 0 1 188 108"
+              stroke="url(#arcGrad)" stroke-width="15"
+              fill="none" stroke-linecap="round" opacity="0.18"/>
+        <!-- Value arc -->
+        <path id="t-arc"
+              d="M 22 108 A 83 83 0 0 1 188 108"
+              stroke="#4ade80" stroke-width="15"
+              fill="none" stroke-linecap="round"
+              stroke-dasharray="260.8" stroke-dashoffset="121"
+              filter="url(#arcGlow)"
+              style="transition: stroke-dashoffset 0.9s cubic-bezier(.34,1.2,.64,1), stroke 0.5s;"/>
+        <!-- Needle dot -->
+        <circle id="t-dot" cx="105" cy="25" r="6"
+                fill="#4ade80" opacity="0.9"
+                style="transition: fill 0.5s;"
+                filter="url(#arcGlow)"/>
+        <!-- Value -->
+        <text id="t-val" x="105" y="88" text-anchor="middle"
+              font-size="42" font-weight="900" fill="#e8eaf8" font-family="inherit"
+              style="transition: fill 0.5s;">{{ data.temperature }}</text>
+        <text x="105" y="108" text-anchor="middle"
+              font-size="11" fill="#7b83a8" font-family="inherit">°C — ปลากัดชอบ 26-30°C</text>
+      </svg>
+    </div>
+
+    <div id="t-status" class="temp-status"></div>
+    <div class="input-row">
+      <input type="number" id="t-input" step="0.5" min="15" max="40"
+             value="{{ data.temperature }}" placeholder="กรอกอุณหภูมิ">
+      <button class="btn btn-primary" onclick="updateTemp()">บันทึก</button>
+    </div>
+  </div>
+
+  <!-- WATER CHANGE ─────────────────────────────────── -->
+  <div class="card">
+    <div class="chip">
+      <div class="chip-dot" style="background:var(--blue);box-shadow:0 0 8px var(--blue);"></div>
+      การเปลี่ยนน้ำ
+    </div>
+
+    <div class="wc-body">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="ringGlow">
+              <feGaussianBlur stdDeviation="2.5" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <circle cx="60" cy="60" r="50" stroke="rgba(255,255,255,0.06)" stroke-width="11" fill="none"/>
+          <circle cx="60" cy="60" r="50" id="wc-ring"
+                  stroke="#4ade80" stroke-width="11" fill="none"
+                  stroke-dasharray="314.16"
+                  stroke-dashoffset="{{ ((1 - days_left / data.change_interval_days) * 314.16)|round(2) if days_left > 0 else 314.16 }}"
+                  transform="rotate(-90 60 60)" stroke-linecap="round"
+                  filter="url(#ringGlow)"
+                  style="transition: stroke-dashoffset 0.9s cubic-bezier(.34,1.2,.64,1), stroke 0.5s;"/>
+          <text id="wc-num" x="60" y="55" text-anchor="middle"
+                font-size="32" font-weight="900" fill="#e8eaf8" font-family="inherit">{{ days_left }}</text>
+          <text x="60" y="71" text-anchor="middle"
+                font-size="9" fill="#7b83a8" font-family="inherit">วันที่เหลือ</text>
+        </svg>
+      </div>
+
+      <div class="wc-stats">
+        <div class="stat-row">
+          <span class="stat-label">ผ่านมาแล้ว</span>
+          <span class="stat-value" id="days-since">{{ days_since }} วัน</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">เปลี่ยนล่าสุด</span>
+          <span class="stat-value" id="last-change" style="font-size:0.85rem;">{{ data.last_water_change }}</span>
+        </div>
+        <div class="select-row">
+          <label>รอบ:</label>
+          <select id="wc-interval">
+            {% for d in [3,5,7,10,14] %}
+            <option value="{{ d }}" {% if d == data.change_interval_days %}selected{% endif %}>{{ d }} วัน</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-success btn-full" onclick="markWaterChange()">
+      ✅ เปลี่ยนน้ำแล้ววันนี้
+    </button>
+  </div>
+
+  <!-- CAMERA ───────────────────────────────────────── -->
+  <div class="card" id="camera-section">
+    <div class="chip" style="margin-bottom:18px;">
+      <div class="chip-dot" style="background:var(--violet);box-shadow:0 0 8px var(--violet);"></div>
+      ตรวจโรคด้วย AI
+    </div>
+
+    <div class="cam-grid">
+      <!-- Preview -->
+      <div>
+        <div class="cam-frame" id="cam-frame">
+          <div class="cam-ph" id="cam-ph">
+            <div class="cam-ph-icon">📷</div>
+            <p>เปิดกล้องหรืออัพโหลดรูป<br>เพื่อเริ่มวิเคราะห์โรค</p>
+          </div>
+          <video id="video" autoplay playsinline></video>
+          <canvas id="result-canvas"></canvas>
+        </div>
+
+        <div class="cam-btns">
+          <button class="btn btn-primary"  onclick="startCamera()">📷 เปิดกล้อง</button>
+          <button class="btn btn-success"  onclick="captureAndDetect()" id="btn-cap" disabled>✦ ถ่าย+วิเคราะห์</button>
+          <button class="btn btn-violet"   onclick="document.getElementById('file-input').click()">📁 อัพโหลด</button>
+          <button class="btn btn-danger"   onclick="stopCamera()" id="btn-stop" style="display:none;">✕ หยุดกล้อง</button>
+        </div>
+        <input type="file" id="file-input" accept="image/*" onchange="fileDetect(this)">
+      </div>
+
+      <!-- Result -->
+      <div class="r-panel">
+        <div class="r-empty" id="r-empty">
+          <span>🔍</span>
+          <p>ผลการวิเคราะห์จะแสดงที่นี่<br>หลังจากสแกนภาพ</p>
+        </div>
+
+        <div class="r-verdict" id="r-verdict">
+          <div class="r-vd-tag">ผลการวิเคราะห์</div>
+          <div class="r-vd-name" id="r-name">—</div>
+          <div class="r-vd-conf" id="r-conf"></div>
+          <div class="r-conf-track">
+            <div class="r-conf-fill" id="r-cfill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="r-top5" id="r-top5">
+          <div class="r-top5-title">เปรียบเทียบทุกคลาส</div>
+          <div class="r-bars" id="r-bars"></div>
+        </div>
+
+        <div class="r-advice" id="r-advice">
+          <h4>💊 วิธีรักษาที่แนะนำ</h4>
+          <ul id="r-advice-list"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TREATMENT GUIDE ──────────────────────────────── -->
+  <div class="section-head">
+    <div class="section-head-line"></div>
+    <div class="section-head-label">คู่มือการรักษาโรค</div>
+    <div class="section-head-line right"></div>
+  </div>
+
+  <div class="card" id="treatment-section">
+    <div class="chip" style="margin-bottom:18px;">
+      <div class="chip-dot" style="background:var(--pink);box-shadow:0 0 8px var(--pink);"></div>
+      โรคที่ AI สามารถตรวจจับได้
+    </div>
+    <div class="t-grid">
+      {% set cfg = {
+        'healthy':    {'bg':'rgba(74,222,128,0.07)',  'glow':'rgba(74,222,128,0.2)',  'ibg':'rgba(74,222,128,0.15)',  'ic':'#4ade80', 'tc':'#4ade80'},
+        'fin_rot':    {'bg':'rgba(248,113,113,0.07)', 'glow':'rgba(248,113,113,0.2)', 'ibg':'rgba(248,113,113,0.15)', 'ic':'#f87171', 'tc':'#f87171'},
+        'fungus':     {'bg':'rgba(251,146,60,0.07)',  'glow':'rgba(251,146,60,0.2)',  'ibg':'rgba(251,146,60,0.15)',  'ic':'#fb923c', 'tc':'#fb923c'},
+        'dropsy':     {'bg':'rgba(248,113,113,0.07)', 'glow':'rgba(248,113,113,0.2)', 'ibg':'rgba(248,113,113,0.15)', 'ic':'#f87171', 'tc':'#f87171'},
+        'white_spot': {'bg':'rgba(251,191,36,0.07)',  'glow':'rgba(251,191,36,0.2)',  'ibg':'rgba(251,191,36,0.15)',  'ic':'#fbbf24', 'tc':'#fbbf24'},
+      } %}
+      {% for key, t in treatments.items() %}
+      {% set c = cfg[key] %}
+      <div class="t-card" style="background:{{ c.bg }}; --t-glow:{{ c.glow }}; box-shadow:0 4px 24px rgba(0,0,0,0.3);">
+        <div class="t-icon-wrap" style="background:{{ c.ibg }}; border:1px solid {{ c.ic }}33;">
+          {{ t.icon }}
+        </div>
+        <div class="t-name" style="color:{{ c.tc }};">{{ class_thai[key] if key in class_thai else key }}</div>
+        <div class="t-cause">{{ t.cause }}</div>
+        <ul class="t-steps">
+          {% for step in t.steps %}
+          <li><b style="color:{{ c.tc }};">▸</b>{{ step }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</main>
+
+<!-- QR Modal -->
+<div class="modal" id="qr-modal" onclick="this.classList.remove('show')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <h3>📱 เปิดบนมือถือ</h3>
+    <div id="qr-wrap"><div class="spin"></div></div>
+    <div class="modal-url" id="qr-url"></div>
+    <div class="modal-note">ต้องเชื่อมต่อ WiFi เดียวกัน<br>กด "ขั้นสูง → ไปยังเว็บไซต์" เมื่อ browser เตือน</div>
+    <button class="btn btn-ghost btn-full" onclick="document.getElementById('qr-modal').classList.remove('show')">ปิด</button>
+  </div>
+</div>
+
+<script>
+/* ═══ BUBBLES ══════════════════════════════════════════ */
+(function() {
+  const wrap = document.getElementById('bubbles');
+  for (let i = 0; i < 14; i++) {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const sz = 8 + Math.random() * 22;
+    Object.assign(b.style, {
+      width: sz + 'px', height: sz + 'px',
+      left: (Math.random() * 100) + '%',
+      animationDuration: (14 + Math.random() * 20) + 's',
+      animationDelay: (Math.random() * 15) + 's',
+      opacity: 0.3 + Math.random() * 0.4,
+    });
+    wrap.appendChild(b);
+  }
+})();
+
+/* ═══ BUTTON RIPPLE ════════════════════════════════════ */
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.btn');
+  if (!btn || btn.disabled) return;
+  const r = document.createElement('span');
+  r.className = 'ripple';
+  const rect = btn.getBoundingClientRect();
+  const sz = Math.max(rect.width, rect.height);
+  Object.assign(r.style, {
+    width: sz + 'px', height: sz + 'px',
+    left: (e.clientX - rect.left - sz/2) + 'px',
+    top:  (e.clientY - rect.top  - sz/2) + 'px',
+  });
+  btn.appendChild(r);
+  setTimeout(() => r.remove(), 500);
+});
+
+/* ═══ TEMPERATURE GAUGE ════════════════════════════════ */
+const ARC = 260.8, TMIN = 20, TMAX = 35;
+
+/* Needle dot positions along the arc (pre-computed for each corner) */
+function needlePos(v) {
+  const r = Math.min(1, Math.max(0, (v - TMIN) / (TMAX - TMIN)));
+  const angle = Math.PI + r * Math.PI; // 180° → 360°
+  const cx = 105, cy = 108, rad = 83;
+  return { x: cx + rad * Math.cos(angle), y: cy + rad * Math.sin(angle) };
+}
+
+function updateTempUI(v) {
+  v = parseFloat(v); if (isNaN(v)) return;
+  const r = Math.min(1, Math.max(0, (v - TMIN) / (TMAX - TMIN)));
+  document.getElementById('t-val').textContent = v;
+  document.getElementById('t-arc').setAttribute('stroke-dashoffset', (ARC * (1 - r)).toFixed(1));
+
+  const p = needlePos(v);
+  const dot = document.getElementById('t-dot');
+  dot.setAttribute('cx', p.x.toFixed(1));
+  dot.setAttribute('cy', p.y.toFixed(1));
+
+  let color, label, bg;
+  if      (v < 22) { color='#60a5fa'; label='❄️ เย็นมาก — อันตราย'; bg='rgba(96,165,250,0.12)'; }
+  else if (v < 26) { color='#93c5fd'; label='❄️ เย็นเกินไป — ควรเพิ่มอุณหภูมิ'; bg='rgba(96,165,250,0.08)'; }
+  else if (v <=30) { color='#4ade80'; label='✅ อุณหภูมิสมบูรณ์แบบ'; bg='rgba(74,222,128,0.1)'; }
+  else if (v <=32) { color='#fbbf24'; label='⚠️ ค่อนข้างร้อน — ระวังด้วย'; bg='rgba(251,191,36,0.1)'; }
+  else             { color='#f87171'; label='🔥 ร้อนเกินไป — อันตราย!'; bg='rgba(248,113,113,0.12)'; }
+
+  document.getElementById('t-arc').setAttribute('stroke', color);
+  dot.setAttribute('fill', color);
+  document.getElementById('t-val').setAttribute('fill', color);
+  const st = document.getElementById('t-status');
+  st.textContent = label; st.style.color = color;
+  st.style.background = bg; st.style.borderColor = color + '40';
+}
+
+document.addEventListener('DOMContentLoaded', () => updateTempUI({{ data.temperature }}));
+document.getElementById('t-input').addEventListener('input', e => updateTempUI(e.target.value));
+
+async function updateTemp() {
+  const v = parseFloat(document.getElementById('t-input').value);
+  if (isNaN(v)) return;
+  await fetch('/api/temperature', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({temperature:v}) });
+  updateTempUI(v);
+}
+
+/* ═══ WATER CHANGE RING ════════════════════════════════ */
+const CIRC = 314.16;
+
+function updateWCRing(left, total) {
+  const ring = document.getElementById('wc-ring');
+  const num  = document.getElementById('wc-num');
+  const r = Math.min(1, Math.max(0, left / total));
+  ring.setAttribute('stroke-dashoffset', (CIRC * (1 - r)).toFixed(2));
+  num.textContent = left;
+  ring.setAttribute('stroke', left === 0 ? '#f87171' : left <= 2 ? '#fbbf24' : '#4ade80');
+}
+
+async function markWaterChange() {
+  const interval = parseInt(document.getElementById('wc-interval').value);
+  const res  = await fetch('/api/water-change', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({interval}) });
+  const data = await res.json();
+  document.getElementById('last-change').textContent = data.last_water_change;
+  document.getElementById('days-since').textContent  = '0 วัน';
+  updateWCRing(interval, interval);
+}
+
+/* ═══ CAMERA ═══════════════════════════════════════════ */
+let camStream = null;
+
+async function startCamera() {
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} }
+    });
+    const v = document.getElementById('video');
+    v.srcObject = camStream; v.style.display = 'block';
+    document.getElementById('cam-ph').style.display     = 'none';
+    document.getElementById('result-canvas').style.display = 'none';
+    document.getElementById('btn-cap').disabled = false;
+    document.getElementById('btn-stop').style.display   = '';
+    document.getElementById('cam-frame').classList.remove('scanning');
+  } catch(e) {
+    alert('ไม่สามารถเปิดกล้อง\nลองอัพโหลดรูปแทนครับ\n\n' + e.message);
+  }
+}
+
+function stopCamera() {
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  document.getElementById('video').style.display           = 'none';
+  document.getElementById('cam-ph').style.display          = '';
+  document.getElementById('btn-cap').disabled              = true;
+  document.getElementById('btn-stop').style.display        = 'none';
+  document.getElementById('cam-frame').classList.remove('scanning');
+}
+
+async function captureAndDetect() {
+  const vid = document.getElementById('video');
+  const cvs = document.getElementById('result-canvas');
+  cvs.width = vid.videoWidth; cvs.height = vid.videoHeight;
+  cvs.getContext('2d').drawImage(vid, 0, 0);
+  stopCamera();
+  cvs.style.display = 'block';
+  await runDetect(cvs.toDataURL('image/jpeg', 0.9));
+}
+
+function fileDetect(input) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const cvs = document.getElementById('result-canvas');
+    const img = new Image();
+    img.onload = async () => {
+      cvs.width = img.width; cvs.height = img.height;
+      cvs.getContext('2d').drawImage(img, 0, 0);
+      cvs.style.display = 'block';
+      document.getElementById('cam-ph').style.display = 'none';
+      await runDetect(e.target.result);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+async function runDetect(b64) {
+  document.getElementById('r-empty').style.display   = 'none';
+  document.getElementById('r-verdict').style.display = 'block';
+  document.getElementById('r-top5').style.display    = 'none';
+  document.getElementById('r-advice').style.display  = 'none';
+  document.getElementById('cam-frame').classList.add('scanning');
+
+  document.getElementById('r-name').innerHTML = '<span style="color:var(--sub)">กำลังวิเคราะห์...</span>';
+  document.getElementById('r-conf').textContent = '';
+  document.getElementById('r-cfill').style.width = '0%';
+  document.getElementById('r-bars').innerHTML = '<div class="spin" style="width:22px;height:22px;border-width:2px;margin:6px auto;"></div>';
+
+  try {
+    const res  = await fetch('/api/detect', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({image:b64}) });
+    const data = await res.json();
+    document.getElementById('cam-frame').classList.remove('scanning');
+
+    if (data.error) {
+      document.getElementById('r-name').innerHTML = `<span style="color:var(--red)">❌ ${data.error}</span>`;
+      return;
+    }
+
+    const ok    = data.class === 'healthy';
+    const color = ok ? '#4ade80' : '#f87171';
+    const grad  = ok ? 'linear-gradient(90deg,#4ade80,#22c55e)' : 'linear-gradient(90deg,#f87171,#dc2626)';
+
+    document.getElementById('r-name').innerHTML = `<span style="color:${color}">${data.treatment.icon||''} ${data.thai}</span>`;
+    document.getElementById('r-conf').textContent = `ความมั่นใจ ${(data.confidence*100).toFixed(1)}%`;
+    document.getElementById('r-cfill').style.background = grad;
+    setTimeout(() => document.getElementById('r-cfill').style.width = (data.confidence*100).toFixed(1)+'%', 60);
+
+    // Top-5
+    document.getElementById('r-top5').style.display = 'block';
+    document.getElementById('r-bars').innerHTML = data.top5.map((d,i) => `
+      <div class="r-bar-row">
+        <span class="r-bar-name${i===0?' is-top':''}">${d.thai}</span>
+        <div class="r-bar-track">
+          <div class="r-bar-fill" style="width:0%;transition-delay:${i*70}ms;" data-w="${(d.conf*100).toFixed(1)}"></div>
+        </div>
+        <span class="r-bar-pct">${(d.conf*100).toFixed(1)}%</span>
+      </div>`).join('');
+    setTimeout(() => {
+      document.querySelectorAll('.r-bar-fill').forEach(el => el.style.width = el.dataset.w + '%');
+    }, 100);
+
+    // Advice
+    if (!ok && data.treatment && data.treatment.steps) {
+      document.getElementById('r-advice').style.display = 'block';
+      document.getElementById('r-advice-list').innerHTML = data.treatment.steps.map(s => `<li>${s}</li>`).join('');
+    }
+  } catch(e) {
+    document.getElementById('cam-frame').classList.remove('scanning');
+    document.getElementById('r-name').innerHTML = `<span style="color:var(--red)">❌ ${e.message}</span>`;
+  }
+}
+
+/* ═══ AUTO REFRESH TEMPERATURE ════════════════════════════ */
+async function fetchLatestTemp() {
+  try {
+    const res  = await fetch('/api/status');
+    const data = await res.json();
+    const v = parseFloat(data.temperature);
+    document.getElementById('t-input').value = v;
+    updateTempUI(v);
+  } catch(e) {}
+}
+// อัพเดทอุณหภูมิจาก ESP32 ทุก 30 วินาที
+setInterval(fetchLatestTemp, 30000);
+
+/* ═══ QR ════════════════════════════════════════════════ */
+async function showQR() {
+  document.getElementById('qr-modal').classList.add('show');
+  document.getElementById('qr-wrap').innerHTML = '<div class="spin"></div>';
+  document.getElementById('qr-url').textContent = '';
+  const res  = await fetch('/api/qr');
+  const data = await res.json();
+  document.getElementById('qr-wrap').innerHTML = `<img src="${data.qr}" alt="QR">`;
+  document.getElementById('qr-url').textContent = data.url;
+}
+</script>
+</body>
+</html>
