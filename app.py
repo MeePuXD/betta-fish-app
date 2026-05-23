@@ -38,6 +38,7 @@ CLASS_THAI = {
     "fungus":     "เชื้อรา (Fungus)",
     "dropsy":     "ท้องมาน (Dropsy)",
     "white_spot": "จุดขาว (White Spot)",
+    "not_fish":   "ไม่พบปลากัด",
 }
 
 TREATMENTS = {
@@ -143,9 +144,9 @@ def check_water_change():
             days_since = (date.today() - last_change).days
             days_left = data["change_interval_days"] - days_since
             if days_left <= 0:
-                send_line(f"🐟 ถึงเวลาเปลี่ยนน้ำแล้วครับ!\nผ่านมา {days_since} วันแล้ว อย่าลืมเปลี่ยนน้ำให้ปลากัดด้วยนะครับ")
+                send_line(f"🐟 ได้เวลาเปลี่ยนน้ำตู้ปลาของคุณแล้ว")
             elif days_left == 1:
-                send_line(f"🐟 พรุ่งนี้ต้องเปลี่ยนน้ำแล้วครับ!\nเตรียมน้ำไว้ได้เลย")
+                send_line(f"🐟 ได้เวลาเปลี่ยนน้ำตู้ปลาของคุณแล้ว")
         except Exception as e:
             print(f"check error: {e}")
         time.sleep(86400)  # ตรวจทุก 24 ชั่วโมง
@@ -270,7 +271,7 @@ def api_detect():
             for i, c in zip(probs.top5, probs.top5conf.tolist())
         ]
 
-        if top1_conf < 0.60:
+        if top1_conf < 0.60 or class_key == "not_fish":
             return jsonify({
                 "class": "unknown",
                 "thai": "ไม่พบปลากัด",
