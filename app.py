@@ -293,12 +293,14 @@ def api_detect():
 
 @app.route("/api/qr")
 def api_qr():
+    space_host = os.environ.get("SPACE_HOST")
     url = (os.environ.get("RENDER_EXTERNAL_URL") or
+           (f"https://{space_host}" if space_host else None) or
            os.environ.get("APP_URL") or
            None)
     if not url:
         ip = get_local_ip()
-        port = int(os.environ.get("PORT", 8000))
+        port = int(os.environ.get("PORT", 7860))
         url = f"http://{ip}:{port}"
     qr = qrcode.QRCode()
     qr.add_data(url)
