@@ -4,10 +4,16 @@ import base64
 import socket
 import qrcode
 import io
+import requests
+import threading
+import time
 from datetime import date
 from flask import Flask, render_template, request, jsonify
 import cv2
 import numpy as np
+
+LINE_TOKEN   = os.environ.get("LINE_TOKEN", "CU/wXULRuUwTQHcNsTYUKxUKisbKLmRPoEaFhw/yAs1PXtDiXNfhLJpHnFk4lDcemSb7KOgA70A3SVVbUhEX+zRyxqjZle2sLhVlO415/cI1zJqOW2x87B67HEwIVKnv56lvyXzErh8mQBuP0EvnEgdB04t89/1O/w1cDnyilFU=")
+LINE_USER_ID = os.environ.get("LINE_USER_ID", "U362c13c05f69a6044e79654fb593a0e9")
 
 try:
     from ultralytics import YOLO
@@ -115,6 +121,34 @@ def load_model():
         print("ไม่พบโมเดล — กรุณา train ก่อน")
 
 load_model()
+
+def send_line(msg):
+    try:
+        requests.post(
+            "https://api.line.me/v2/bot/message/push",
+            headers={"Authorization": f"Bearer {LINE_TOKEN}", "Content-Type": "application/json"},
+            json={"to": LINE_USER_ID, "messages": [{"type": "text", "text": msg}]},
+            timeout=10
+        )
+    except Exception as e:
+        print(f"LINE error: {e}")
+
+def check_water_change():
+    while True:
+        try:
+            data = load_data()
+            last_change = date.fromisoformat(data["last_water_change"])
+            days_since = (date.today() - last_change).days
+            days_left = data["change_interval_days"] - days_since
+            if days_left <= 0:
+                send_line(f"🐟 ถึงเวลาเปลี่ยนน้ำแล้วครับ!\nผ่านมา {days_since} วันแล้ว อย่าลืมเปลี่ยนน้ำให้ปลากัดด้วยนะครับ")
+            elif days_left == 1:
+                send_line(f"🐟 พรุ่งนี้ต้องเปลี่ยนน้ำแล้วครับ!\nเตรียมน้ำไว้ได้เลย")
+        except Exception as e:
+            print(f"check error: {e}")
+        time.sleep(86400)  # ตรวจทุก 24 ชั่วโมง
+
+threading.Thread(target=check_water_change, daemon=True).start()
 
 def load_data():
     if os.path.exists(DATA_FILE):
