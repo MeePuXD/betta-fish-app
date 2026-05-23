@@ -208,6 +208,12 @@ def api_temperature():
     save_data(data)
     return jsonify({"ok": True})
 
+@app.route("/api/test-notify", methods=["POST"])
+def api_test_notify():
+    msg = request.json.get("message", "🐟 ทดสอบการแจ้งเตือนจากระบบ Betta Fish Monitor!")
+    send_line(msg)
+    return jsonify({"ok": True})
+
 @app.route("/api/interval", methods=["POST"])
 def api_interval():
     data = load_data()

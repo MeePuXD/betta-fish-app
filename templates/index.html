@@ -686,6 +686,9 @@ main {
     <button class="btn btn-success btn-full" onclick="markWaterChange()">
       ✅ เปลี่ยนน้ำแล้ววันนี้
     </button>
+    <button class="btn btn-ghost btn-full" onclick="testNotify()" style="margin-top:8px;font-size:0.82rem;padding:10px;">
+      🔔 ทดสอบแจ้งเตือน LINE
+    </button>
   </div>
 
   <!-- CAMERA ───────────────────────────────────────── -->
@@ -1010,6 +1013,21 @@ async function runDetect(b64) {
   } catch(e) {
     document.getElementById('cam-frame').classList.remove('scanning');
     document.getElementById('r-name').innerHTML = `<span style="color:var(--red)">❌ ${e.message}</span>`;
+  }
+}
+
+/* ═══ TEST LINE NOTIFY ══════════════════════════════════════ */
+async function testNotify() {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลังส่ง...';
+  try {
+    await fetch('/api/test-notify', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:'🐟 ทดสอบการแจ้งเตือนจาก Betta Fish Monitor!\nระบบแจ้งเตือนทำงานปกติ ✅'}) });
+    btn.textContent = '✅ ส่งแล้ว! เช็ค LINE ได้เลย';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '🔔 ทดสอบแจ้งเตือน LINE'; }, 4000);
+  } catch(e) {
+    btn.textContent = '❌ ส่งไม่สำเร็จ';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '🔔 ทดสอบแจ้งเตือน LINE'; }, 3000);
   }
 }
 
