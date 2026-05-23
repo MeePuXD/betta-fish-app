@@ -1023,7 +1023,7 @@ async function testNotify() {
   btn.disabled = true;
   btn.textContent = '⏳ กำลังส่ง...';
   try {
-    const res  = await fetch('/api/test-notify', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:'🐟 ทดสอบการแจ้งเตือนจาก Betta Fish Monitor!\nระบบแจ้งเตือนทำงานปกติ ✅'}) });
+    const res  = await fetch('/api/test-notify', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:'🐟 ได้เวลาเปลี่ยนน้ำตู้ปลาของคุณแล้ว'}) });
     const data = await res.json();
     if (data.ok) {
       btn.textContent = '✅ ส่งแล้ว! เช็ค LINE ได้เลย';
