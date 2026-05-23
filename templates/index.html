@@ -1023,9 +1023,15 @@ async function testNotify() {
   btn.disabled = true;
   btn.textContent = '⏳ กำลังส่ง...';
   try {
-    await fetch('/api/test-notify', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:'🐟 ทดสอบการแจ้งเตือนจาก Betta Fish Monitor!\nระบบแจ้งเตือนทำงานปกติ ✅'}) });
-    btn.textContent = '✅ ส่งแล้ว! เช็ค LINE ได้เลย';
-    setTimeout(() => { btn.disabled = false; btn.textContent = '🔔 ทดสอบแจ้งเตือน LINE'; }, 4000);
+    const res  = await fetch('/api/test-notify', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:'🐟 ทดสอบการแจ้งเตือนจาก Betta Fish Monitor!\nระบบแจ้งเตือนทำงานปกติ ✅'}) });
+    const data = await res.json();
+    if (data.ok) {
+      btn.textContent = '✅ ส่งแล้ว! เช็ค LINE ได้เลย';
+    } else {
+      btn.textContent = '❌ Error ' + data.status;
+      alert('LINE ส่งไม่สำเร็จ\nHTTP ' + data.status + '\n\n' + data.detail);
+    }
+    setTimeout(() => { btn.disabled = false; btn.textContent = '🔔 ทดสอบแจ้งเตือน LINE'; }, 5000);
   } catch(e) {
     btn.textContent = '❌ ส่งไม่สำเร็จ';
     setTimeout(() => { btn.disabled = false; btn.textContent = '🔔 ทดสอบแจ้งเตือน LINE'; }, 3000);

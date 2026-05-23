@@ -124,14 +124,16 @@ load_model()
 
 def send_line(msg):
     try:
-        requests.post(
+        r = requests.post(
             "https://api.line.me/v2/bot/message/push",
             headers={"Authorization": f"Bearer {LINE_TOKEN}", "Content-Type": "application/json"},
             json={"to": LINE_USER_ID, "messages": [{"type": "text", "text": msg}]},
             timeout=10
         )
+        return r.status_code, r.text
     except Exception as e:
         print(f"LINE error: {e}")
+        return 0, str(e)
 
 def check_water_change():
     while True:
@@ -211,8 +213,9 @@ def api_temperature():
 @app.route("/api/test-notify", methods=["POST"])
 def api_test_notify():
     msg = request.json.get("message", "🐟 ทดสอบการแจ้งเตือนจากระบบ Betta Fish Monitor!")
-    send_line(msg)
-    return jsonify({"ok": True})
+    status_code, body = send_line(msg)
+    ok = status_code == 200
+    return jsonify({"ok": ok, "status": status_code, "detail": body})
 
 @app.route("/api/interval", methods=["POST"])
 def api_interval():
