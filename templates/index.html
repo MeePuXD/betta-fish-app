@@ -335,11 +335,16 @@ main {
 .select-row { display: flex; align-items: center; gap: 8px; }
 .select-row label { font-size: 0.78rem; color: var(--sub); white-space: nowrap; }
 .select-row select {
-  flex: 1; background: var(--surface); border: 1px solid var(--border);
+  flex: 1; background: #1a1a38; border: 1px solid var(--border);
   border-radius: 11px; padding: 9px 11px; color: var(--text); font-family: inherit;
   transition: border-color 0.2s;
+  -webkit-appearance: auto; appearance: auto;
 }
 .select-row select:focus { outline: none; border-color: var(--teal); }
+.select-row select option {
+  background: #1a1a38;
+  color: #e8eaf8;
+}
 
 /* ═══════════════════════════════════════════════════════
    CAMERA CARD
