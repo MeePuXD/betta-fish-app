@@ -267,6 +267,19 @@ def api_detect():
             for i, c in zip(probs.top5, probs.top5conf.tolist())
         ]
 
+        if top1_conf < 0.60:
+            return jsonify({
+                "class": "unknown",
+                "thai": "ไม่พบปลากัด",
+                "confidence": round(top1_conf, 4),
+                "top5": top5,
+                "treatment": {"icon": "❓", "steps": [
+                    "ถ่ายภาพปลากัดให้ชัดและใกล้ขึ้น",
+                    "ให้ปลาอยู่กลางภาพและมีแสงสว่างพอ",
+                    "หลีกเลี่ยงภาพเบลอหรือมีสิ่งอื่นในเฟรม",
+                ]},
+            })
+
         return jsonify({
             "class": class_key,
             "thai": CLASS_THAI.get(class_key, class_key),

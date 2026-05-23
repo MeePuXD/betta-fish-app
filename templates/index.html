@@ -982,9 +982,10 @@ async function runDetect(b64) {
       return;
     }
 
+    const unknown = data.class === 'unknown';
     const ok    = data.class === 'healthy';
-    const color = ok ? '#4ade80' : '#f87171';
-    const grad  = ok ? 'linear-gradient(90deg,#4ade80,#22c55e)' : 'linear-gradient(90deg,#f87171,#dc2626)';
+    const color = unknown ? '#fbbf24' : ok ? '#4ade80' : '#f87171';
+    const grad  = unknown ? 'linear-gradient(90deg,#fbbf24,#f59e0b)' : ok ? 'linear-gradient(90deg,#4ade80,#22c55e)' : 'linear-gradient(90deg,#f87171,#dc2626)';
 
     document.getElementById('r-name').innerHTML = `<span style="color:${color}">${data.treatment.icon||''} ${data.thai}</span>`;
     document.getElementById('r-conf').textContent = `ความมั่นใจ ${(data.confidence*100).toFixed(1)}%`;
@@ -1006,7 +1007,7 @@ async function runDetect(b64) {
     }, 100);
 
     // Advice
-    if (!ok && data.treatment && data.treatment.steps) {
+    if ((unknown || !ok) && data.treatment && data.treatment.steps) {
       document.getElementById('r-advice').style.display = 'block';
       document.getElementById('r-advice-list').innerHTML = data.treatment.steps.map(s => `<li>${s}</li>`).join('');
     }
