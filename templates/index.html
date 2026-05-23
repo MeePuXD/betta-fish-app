@@ -338,7 +338,7 @@ main {
   flex: 1; background: #1a1a38; border: 1px solid var(--border);
   border-radius: 11px; padding: 9px 11px; color: var(--text); font-family: inherit;
   transition: border-color 0.2s;
-  -webkit-appearance: auto; appearance: auto;
+  color-scheme: dark;
 }
 .select-row select:focus { outline: none; border-color: var(--teal); }
 .select-row select option {
@@ -1012,6 +1012,12 @@ async function runDetect(b64) {
     document.getElementById('r-name').innerHTML = `<span style="color:var(--red)">❌ ${e.message}</span>`;
   }
 }
+
+/* ═══ WATER CHANGE INTERVAL AUTO-SAVE ═════════════════════ */
+document.getElementById('wc-interval').addEventListener('change', async function() {
+  const interval = parseInt(this.value);
+  await fetch('/api/interval', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({interval}) });
+});
 
 /* ═══ AUTO REFRESH TEMPERATURE ════════════════════════════ */
 async function fetchLatestTemp() {

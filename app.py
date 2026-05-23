@@ -208,6 +208,13 @@ def api_temperature():
     save_data(data)
     return jsonify({"ok": True})
 
+@app.route("/api/interval", methods=["POST"])
+def api_interval():
+    data = load_data()
+    data["change_interval_days"] = int(request.json["interval"])
+    save_data(data)
+    return jsonify({"ok": True})
+
 @app.route("/api/water-change", methods=["POST"])
 def api_water_change():
     data = load_data()
