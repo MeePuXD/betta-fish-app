@@ -26,6 +26,11 @@ DATA_FILE = os.path.join(BASE_DIR, "aquarium_data.json")
 
 def find_best_model():
     model_dir = os.path.join(BASE_DIR, "models")
+    # ลอง ONNX ก่อน (เร็วกว่า 2-3x บน CPU)
+    for name in ["betta_classifier-v7n", "betta_classifier-v7", "betta_classifier-v6"]:
+        onnx = os.path.join(model_dir, name, "weights", "best.onnx")
+        if os.path.exists(onnx):
+            return onnx
     for name in ["betta_classifier-v7n", "betta_classifier-v7", "betta_classifier-v6", "betta_classifier-v5", "betta_classifier-v4", "betta_classifier-v3", "betta_classifier-final", "betta_classifier-2", "betta_classifier"]:
         pt = os.path.join(model_dir, name, "weights", "best.pt")
         if os.path.exists(pt):
@@ -249,13 +254,13 @@ def api_detect():
         if img is None:
             return jsonify({"error": "อ่านภาพไม่ได้"}), 400
 
-        # ลดขนาดให้ไม่เกิน 160px — ส่งตรงเข้าโมเดลโดยไม่ผ่าน disk
+        # ลดขนาดให้ไม่เกิน 224px แล้วส่งตรงเข้าโมเดล (ไม่ผ่าน disk)
         h, w = img.shape[:2]
-        if max(h, w) > 160:
-            scale = 160 / max(h, w)
+        if max(h, w) > 224:
+            scale = 224 / max(h, w)
             img = cv2.resize(img, (int(w*scale), int(h*scale)))
 
-        results = model(img, verbose=False, imgsz=160)
+        results = model(img, verbose=False, imgsz=224)
         probs = results[0].probs
         names = results[0].names
 
