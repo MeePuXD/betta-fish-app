@@ -625,6 +625,7 @@ main {
     </div>
 
     <div id="t-status" class="temp-status"></div>
+    <div id="t-updated" style="text-align:center;font-size:0.72rem;color:var(--sub);margin-bottom:8px;"></div>
     <div class="input-row">
       <input type="number" id="t-input" step="0.5" min="15" max="40"
              value="{{ data.temperature }}" placeholder="กรอกอุณหภูมิ">
@@ -1052,7 +1053,12 @@ async function fetchLatestTemp() {
     const v = parseFloat(data.temperature);
     document.getElementById('t-input').value = v;
     updateTempUI(v);
-  } catch(e) {}
+    const now = new Date();
+    document.getElementById('t-updated').textContent =
+      'อัพเดทล่าสุด ' + now.toLocaleTimeString('th-TH');
+  } catch(e) {
+    document.getElementById('t-updated').textContent = '⚠️ เชื่อมต่อไม่ได้';
+  }
 }
 // อัพเดทอุณหภูมิจาก ESP32 ทุก 5 วินาที และดึงทันทีตอนโหลดหน้า
 fetchLatestTemp();
