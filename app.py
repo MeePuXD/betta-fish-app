@@ -296,12 +296,12 @@ def api_detect():
 
 @app.route("/api/qr")
 def api_qr():
-    render_url = os.environ.get("RENDER_EXTERNAL_URL")
-    if render_url:
-        url = render_url
-    else:
+    url = (os.environ.get("RENDER_EXTERNAL_URL") or
+           os.environ.get("APP_URL") or
+           None)
+    if not url:
         ip = get_local_ip()
-        port = int(os.environ.get("PORT", 5000))
+        port = int(os.environ.get("PORT", 8000))
         url = f"http://{ip}:{port}"
     qr = qrcode.QRCode()
     qr.add_data(url)
