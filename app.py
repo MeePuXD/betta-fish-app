@@ -249,16 +249,13 @@ def api_detect():
         if img is None:
             return jsonify({"error": "อ่านภาพไม่ได้"}), 400
 
-        # ลดขนาดให้ไม่เกิน 320px เพื่อให้ประมวลผลเร็วขึ้น
+        # ลดขนาดให้ไม่เกิน 160px — ส่งตรงเข้าโมเดลโดยไม่ผ่าน disk
         h, w = img.shape[:2]
-        if max(h, w) > 320:
-            scale = 320 / max(h, w)
+        if max(h, w) > 160:
+            scale = 160 / max(h, w)
             img = cv2.resize(img, (int(w*scale), int(h*scale)))
 
-        tmp = os.path.join(BASE_DIR, "_tmp_web.jpg")
-        cv2.imwrite(tmp, img)
-
-        results = model(tmp, verbose=False, imgsz=224)
+        results = model(img, verbose=False, imgsz=160)
         probs = results[0].probs
         names = results[0].names
 

@@ -940,7 +940,7 @@ async function captureAndDetect() {
   cvs.getContext('2d').drawImage(vid, 0, 0);
   stopCamera();
   cvs.style.display = 'block';
-  await runDetect(cvs.toDataURL('image/jpeg', 0.9));
+  await runDetect(cvs.toDataURL('image/jpeg', 0.6));
 }
 
 function fileDetect(input) {
