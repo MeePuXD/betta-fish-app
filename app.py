@@ -20,7 +20,7 @@ DATA_FILE = os.path.join(BASE_DIR, "aquarium_data.json")
 
 def find_best_model():
     model_dir = os.path.join(BASE_DIR, "models")
-    for name in ["betta_classifier-v5", "betta_classifier-v4", "betta_classifier-v3", "betta_classifier-final", "betta_classifier-2", "betta_classifier"]:
+    for name in ["betta_classifier-v6", "betta_classifier-v5", "betta_classifier-v4", "betta_classifier-v3", "betta_classifier-final", "betta_classifier-2", "betta_classifier"]:
         pt = os.path.join(model_dir, name, "weights", "best.pt")
         if os.path.exists(pt):
             return pt
