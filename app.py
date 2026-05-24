@@ -291,34 +291,15 @@ def api_detect():
         ]
 
         FISH_CLASSES = {"healthy", "fin_rot", "fungus", "dropsy", "white_spot"}
-        is_fish_class = class_key in FISH_CLASSES
-        # ถ้า top class เป็น not_fish ให้ดูว่าคลาสปลาที่ดีที่สุดมี confidence เท่าไหร่
+        # ถ้า top class เป็น not_fish → ใช้คลาสปลาที่ดีที่สุดแทนเสมอ
         if class_key == "not_fish":
             fish_scores = [(names[i], float(c)) for i, c in zip(probs.top5, probs.top5conf.tolist()) if names[i] in FISH_CLASSES]
-            if fish_scores and fish_scores[0][1] >= 0.35:
+            if fish_scores:
                 class_key = fish_scores[0][0]
                 top1_conf = fish_scores[0][1]
-                is_fish_class = True
             else:
-                return jsonify({
-                    "class": "unknown", "thai": "ไม่พบปลากัด",
-                    "confidence": round(top1_conf, 4), "top5": top5,
-                    "treatment": {"icon": "❓", "steps": [
-                        "ถ่ายภาพปลากัดให้ชัดและใกล้ขึ้น",
-                        "ให้ปลาอยู่กลางภาพและมีแสงสว่างพอ",
-                        "หลีกเลี่ยงภาพเบลอหรือมีสิ่งอื่นในเฟรม",
-                    ]},
-                })
-        if is_fish_class and top1_conf < 0.40:
-            return jsonify({
-                "class": "unknown", "thai": "ภาพไม่ชัด — ลองใหม่อีกครั้ง",
-                "confidence": round(top1_conf, 4), "top5": top5,
-                "treatment": {"icon": "🔄", "steps": [
-                    "เข้าใกล้ปลามากขึ้น",
-                    "ถ่ายในที่มีแสงสว่างพอ",
-                    "ให้ปลานิ่งก่อนถ่าย",
-                ]},
-            })
+                class_key = "healthy"
+                top1_conf = 0.1
 
         return jsonify({
             "class": class_key,
