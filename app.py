@@ -24,6 +24,28 @@ except ImportError:
 BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(BASE_DIR, "aquarium_data.json")
 
+HF_MODEL_REPO = "pisitsaejiw7/betta-fish-model"
+HF_MODEL_FILE = "best.pt"
+LOCAL_MODEL_PATH = os.path.join(BASE_DIR, "models", "betta_classifier-v7n", "weights", "best.pt")
+
+def ensure_model_downloaded():
+    if os.path.exists(LOCAL_MODEL_PATH):
+        return
+    try:
+        from huggingface_hub import hf_hub_download
+        os.makedirs(os.path.dirname(LOCAL_MODEL_PATH), exist_ok=True)
+        print(f"Downloading model from HF Hub: {HF_MODEL_REPO}/{HF_MODEL_FILE}")
+        hf_hub_download(
+            repo_id=HF_MODEL_REPO,
+            filename=HF_MODEL_FILE,
+            local_dir=os.path.dirname(LOCAL_MODEL_PATH),
+        )
+        print("Model downloaded.")
+    except Exception as e:
+        print(f"Could not download model: {e}")
+
+ensure_model_downloaded()
+
 def find_best_model():
     model_dir = os.path.join(BASE_DIR, "models")
     for name in ["betta_classifier-v7n", "betta_classifier-v7", "betta_classifier-v6", "betta_classifier-v5", "betta_classifier-v4", "betta_classifier-v3", "betta_classifier-final", "betta_classifier-2", "betta_classifier"]:
@@ -268,16 +290,33 @@ def api_detect():
             for i, c in zip(probs.top5, probs.top5conf.tolist())
         ]
 
-        if top1_conf < 0.60 or class_key == "not_fish":
+        FISH_CLASSES = {"healthy", "fin_rot", "fungus", "dropsy", "white_spot"}
+        is_fish_class = class_key in FISH_CLASSES
+        # ถ้า top class เป็น not_fish ให้ดูว่าคลาสปลาที่ดีที่สุดมี confidence เท่าไหร่
+        if class_key == "not_fish":
+            fish_scores = [(names[i], float(c)) for i, c in zip(probs.top5, probs.top5conf.tolist()) if names[i] in FISH_CLASSES]
+            if fish_scores and fish_scores[0][1] >= 0.35:
+                class_key = fish_scores[0][0]
+                top1_conf = fish_scores[0][1]
+                is_fish_class = True
+            else:
+                return jsonify({
+                    "class": "unknown", "thai": "ไม่พบปลากัด",
+                    "confidence": round(top1_conf, 4), "top5": top5,
+                    "treatment": {"icon": "❓", "steps": [
+                        "ถ่ายภาพปลากัดให้ชัดและใกล้ขึ้น",
+                        "ให้ปลาอยู่กลางภาพและมีแสงสว่างพอ",
+                        "หลีกเลี่ยงภาพเบลอหรือมีสิ่งอื่นในเฟรม",
+                    ]},
+                })
+        if is_fish_class and top1_conf < 0.40:
             return jsonify({
-                "class": "unknown",
-                "thai": "ไม่พบปลากัด",
-                "confidence": round(top1_conf, 4),
-                "top5": top5,
-                "treatment": {"icon": "❓", "steps": [
-                    "ถ่ายภาพปลากัดให้ชัดและใกล้ขึ้น",
-                    "ให้ปลาอยู่กลางภาพและมีแสงสว่างพอ",
-                    "หลีกเลี่ยงภาพเบลอหรือมีสิ่งอื่นในเฟรม",
+                "class": "unknown", "thai": "ภาพไม่ชัด — ลองใหม่อีกครั้ง",
+                "confidence": round(top1_conf, 4), "top5": top5,
+                "treatment": {"icon": "🔄", "steps": [
+                    "เข้าใกล้ปลามากขึ้น",
+                    "ถ่ายในที่มีแสงสว่างพอ",
+                    "ให้ปลานิ่งก่อนถ่าย",
                 ]},
             })
 
